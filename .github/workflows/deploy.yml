@@ -67,8 +67,25 @@ jobs:
           cp /tmp/app-release/frontend/index.html /usr/share/nginx/html/
           cd /opt/combined-app
           npm install --omit=dev
-          systemctl restart combined-backend
-          systemctl restart nginx
+          sudo systemctl restart combined-backend
+            sudo systemctl restart nginx
+
+            echo "Waiting for backend to become healthy..."
+
+            for i in {1..30}; do
+                if curl -fsS http://localhost/health; then
+                    echo "Deployment successful!"
+                    exit 0
+                fi
+
+                echo "Backend not ready yet. Retrying..."
+                sleep 2
+            done
+
+            echo "Backend health check failed!"
+            sudo systemctl status combined-backend --no-pager
+            sudo journalctl -u combined-backend -n 50 --no-pager
+            exit 1
           curl -fsS http://localhost/health
           EOF
           )
