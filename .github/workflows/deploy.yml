@@ -35,7 +35,7 @@ jobs:
         id: instances
         run: |
           INSTANCE_IDS=$(aws autoscaling describe-auto-scaling-groups \
-            --auto-scaling-group-names combined-app-asg \
+            --auto-scaling-group-names app-asg \
             --query "AutoScalingGroups[0].Instances[?LifecycleState=='InService'].InstanceId" \
             --output text)
 
