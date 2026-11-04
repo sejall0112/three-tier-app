@@ -21,7 +21,7 @@
       .then(products => {
         document.getElementById('products').innerHTML =
           '<ul>' + products.map(p =>
-            `<li>${p.name} - \u20B9${Number(product.price).toFixed(2)}</li>`
+            `<li>${p.name} - \u20B9${Number(p.price).toFixed(2)}</li>`
           ).join('') + '</ul>';
       })
       .catch(error => {
