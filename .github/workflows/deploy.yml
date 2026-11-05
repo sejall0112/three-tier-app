@@ -27,7 +27,7 @@ jobs:
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::236172119834:role/s3read-codedeploy
+          role-to-assume: ${{ secrets.AWS_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Prepare deployment package
