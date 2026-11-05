@@ -49,14 +49,14 @@ jobs:
         id: deploy
         run: |
           DEPLOYMENT_ID=$(aws deploy create-deployment \
-            --application-name "$APPLICATION_NAME" \
-            --deployment-group-name "$DEPLOYMENT_GROUP" \
-            --deployment-config-name CodeDeployDefault.OneAtATime \
-            --s3-location bucket="$S3_BUCKET",key="releases/${GITHUB_SHA}.zip",bundleType=zip \
-            --description "GitHub deployment ${GITHUB_SHA}" \
-            --query deploymentId \
-            --output text)
-            --file-exists-behavior OVERWRITE \
+          --application-name "$APPLICATION_NAME" \
+          --deployment-group-name "$DEPLOYMENT_GROUP" \
+          --deployment-config-name CodeDeployDefault.OneAtATime \
+          --file-exists-behavior OVERWRITE \
+          --s3-location bucket="$S3_BUCKET",key="releases/${GITHUB_SHA}.zip",bundleType=zip \
+          --description "GitHub deployment ${GITHUB_SHA}" \
+          --query deploymentId \
+          --output text)  
 
           echo "Deployment ID: $DEPLOYMENT_ID"
           echo "deployment_id=$DEPLOYMENT_ID" >> "$GITHUB_OUTPUT"
