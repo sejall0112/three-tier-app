@@ -56,6 +56,7 @@ jobs:
             --description "GitHub deployment ${GITHUB_SHA}" \
             --query deploymentId \
             --output text)
+            --file-exists-behavior OVERWRITE \
 
           echo "Deployment ID: $DEPLOYMENT_ID"
           echo "deployment_id=$DEPLOYMENT_ID" >> "$GITHUB_OUTPUT"
