@@ -47,10 +47,10 @@ async function start() {
     await pool.query(`
       INSERT INTO products (name, price)
       VALUES
-      ('Burger', 350),
-      ('Pasta', 450),
-      ('Pizza', 600),
-      ('French Fries', 300)
+      ('Laptop', 55000),
+      ('Mobile', 25000),
+      ('Keyboard', 1500),
+      ('Mouse', 800)
     `);
   }
 
