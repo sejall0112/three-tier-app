@@ -1,11 +1,17 @@
 #!/bin/bash
 set -e
 
-echo "Installing application dependencies..."
+echo "Checking application dependencies..."
 
-dnf install -y nginx nodejs npm
+if ! command -v nginx >/dev/null 2>&1; then
+    dnf install -y nginx
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+    dnf install -y nodejs npm
+fi
 
 mkdir -p /opt/combined-app
 mkdir -p /usr/share/nginx/html
 
-echo "Dependencies installed successfully."
+echo "Dependencies are ready."

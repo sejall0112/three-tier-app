@@ -1,13 +1,12 @@
 #!/bin/bash
 set -e
 
-echo "Installing Node.js packages..."
+echo "Installing Node.js dependencies..."
 
 cd /opt/combined-app
-
 npm install --omit=dev
 
-echo "Starting backend service..."
+echo "Starting backend..."
 
 systemctl daemon-reload
 systemctl enable combined-backend
