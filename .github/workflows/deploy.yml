@@ -5,117 +5,65 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-north-1
+  S3_BUCKET: github-deployment-0411
+  APPLICATION_NAME: 3tier-app
+  DEPLOYMENT_GROUP: staging
+
 jobs:
   deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: arn:aws:iam::236172119834:role/s3read-codedeploy
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Package application
+      - name: Prepare deployment package
         run: |
-          zip -r app.zip backend frontend
+          chmod +x scripts/*.sh
+
+          zip -r deployment.zip \
+            appspec.yml \
+            frontend \
+            backend \
+            scripts
 
       - name: Upload package to S3
         run: |
-          aws s3 cp app.zip \
-            s3://${{ secrets.S3_BUCKET }}/releases/${{ github.sha }}.zip
+          aws s3 cp deployment.zip \
+            s3://${S3_BUCKET}/releases/${GITHUB_SHA}.zip
 
-      - name: Find running EC2 instances
-        id: instances
+      - name: Create CodeDeploy deployment
+        id: deploy
         run: |
-          INSTANCE_IDS=$(aws autoscaling describe-auto-scaling-groups \
-            --auto-scaling-group-names app-asg \
-            --query "AutoScalingGroups[0].Instances[?LifecycleState=='InService'].InstanceId" \
+          DEPLOYMENT_ID=$(aws deploy create-deployment \
+            --application-name "$APPLICATION_NAME" \
+            --deployment-group-name "$DEPLOYMENT_GROUP" \
+            --deployment-config-name CodeDeployDefault.OneAtATime \
+            --s3-location bucket="$S3_BUCKET",key="releases/${GITHUB_SHA}.zip",bundleType=zip \
+            --description "GitHub deployment ${GITHUB_SHA}" \
+            --query deploymentId \
             --output text)
 
-          if [ -z "$INSTANCE_IDS" ] || [ "$INSTANCE_IDS" = "None" ]; then
-            echo "No InService EC2 instances found."
-            exit 1
-          fi
+          echo "Deployment ID: $DEPLOYMENT_ID"
+          echo "deployment_id=$DEPLOYMENT_ID" >> "$GITHUB_OUTPUT"
 
-          echo "Found instances: $INSTANCE_IDS"
-          echo "ids=$INSTANCE_IDS" >> "$GITHUB_OUTPUT"
-
-      - name: Deploy using SSM
+      - name: Wait for deployment completion
         run: |
-          BUCKET="${{ secrets.S3_BUCKET }}"
-          RELEASE_KEY="releases/${{ github.sha }}.zip"
+          aws deploy wait deployment-successful \
+            --deployment-id "${{ steps.deploy.outputs.deployment_id }}"
 
-          DEPLOY_SCRIPT=$(cat <<EOF
-          set -e
-          dnf install -y unzip
-          mkdir -p /opt/combined-app /usr/share/nginx/html
-          aws s3 cp s3://$BUCKET/$RELEASE_KEY /tmp/app.zip --region eu-north-1
-          rm -rf /tmp/app-release
-          mkdir -p /tmp/app-release
-          unzip -o /tmp/app.zip -d /tmp/app-release
-          cp /tmp/app-release/backend/server.js /opt/combined-app/
-          cp /tmp/app-release/backend/package.json /opt/combined-app/
-          if [ -f /tmp/app-release/backend/package-lock.json ]; then
-            cp /tmp/app-release/backend/package-lock.json /opt/combined-app/
-          fi
-          cp /tmp/app-release/frontend/index.html /usr/share/nginx/html/
-          cd /opt/combined-app
-          npm install --omit=dev
-          sudo systemctl restart combined-backend
-            sudo systemctl restart nginx
-
-            echo "Waiting for backend to become healthy..."
-
-            for i in {1..30}; do
-                if curl -fsS http://localhost/health; then
-                    echo "Deployment successful!"
-                    exit 0
-                fi
-
-                echo "Backend not ready yet. Retrying..."
-                sleep 2
-            done
-
-            echo "Backend health check failed!"
-            sudo systemctl status combined-backend --no-pager
-            sudo journalctl -u combined-backend -n 50 --no-pager
-            exit 1
-          curl -fsS http://localhost/health
-          EOF
-          )
-
-          echo "$DEPLOY_SCRIPT" > deploy-script.sh
-          jq -n --rawfile script deploy-script.sh \
-            '{commands: [$script]}' > ssm-parameters.json
-
-          INSTANCE_IDS="${{ steps.instances.outputs.ids }}"
-
-          COMMAND_ID=$(aws ssm send-command \
-            --instance-ids $INSTANCE_IDS \
-            --document-name "AWS-RunShellScript" \
-            --parameters file://ssm-parameters.json \
-            --comment "Deploy GitHub commit ${{ github.sha }}" \
-            --query "Command.CommandId" \
-            --output text)
-
-          echo "SSM Command ID: $COMMAND_ID"
-
-          for INSTANCE_ID in $INSTANCE_IDS; do
-            echo "Waiting for deployment on $INSTANCE_ID"
-
-            aws ssm wait command-executed \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID"
-
-            aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --query "Status" \
-              --output text
-          done
+      - name: Deployment successful
+        run: echo "Application deployed successfully!"
