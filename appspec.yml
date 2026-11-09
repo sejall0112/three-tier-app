@@ -5,6 +5,7 @@ os: linux
 files:
   - source: frontend/
     destination: /usr/share/nginx/html
+    file_exists_behavior: OVERWRITE
 
   - source: backend/
     destination: /opt/combined-app
