@@ -23,5 +23,4 @@ phases:
 artifacts:
   files:
     - '**/*'
-      file_exists_behavior : OVERWRITE
   discard-paths: no

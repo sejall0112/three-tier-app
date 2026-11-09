@@ -26,4 +26,3 @@ mkdir -p /opt/combined-app
 mkdir -p /usr/share/nginx/html
 
 echo "BeforeInstall completed successfully."
-```
