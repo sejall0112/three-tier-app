@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing backend dependencies"
+      - cd backend
+      - npm ci
+      - cd ..
+
+  pre_build:
+    commands:
+      - echo "Checking backend JavaScript syntax"
+      - node --check backend/server.js
+
+  build:
+    commands:
+      - echo "Preparing three-tier application"
+      - echo "Build completed successfully"
+
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: no
