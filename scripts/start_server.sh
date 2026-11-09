@@ -37,32 +37,39 @@ export DB_PASSWORD=$(aws ssm get-parameter \
   --query "Parameter.Value" \
   --output text)
 
-echo "Creating secure .env file..."
+echo "Validating database configuration..."
 
+for name in DB_HOST DB_NAME DB_USER DB_PASSWORD; do
+  if [ -z "${!name}" ] || [ "${!name}" = "None" ]; then
+    echo "ERROR: $name is empty."
+    exit 1
+  fi
+done
+
+echo "Creating environment file..."
 umask 077
+
 node -e '
 const fs = require("fs");
 const keys = ["DB_HOST", "DB_NAME", "DB_USER", "DB_PASSWORD"];
-const content = keys.map(k => {
-  if (!process.env[k]) throw new Error(k + " is missing");
-  return k + "=" + JSON.stringify(process.env[k]);
-}).join("\n") + "\n";
+const content = keys.map(k => k + "=" + JSON.stringify(process.env[k]))
+  .join("\n") + "\n";
 fs.writeFileSync("/opt/combined-app/.env", content, { mode: 0o600 });
 '
+
+echo "Setting environment file permissions..."
+chown ec2-user:ec2-user /opt/combined-app/.env
+chmod 600 /opt/combined-app/.env
 
 echo "Reloading systemd..."
 systemctl daemon-reload
 
-echo "Enabling backend service..."
+echo "Enabling and restarting backend..."
 systemctl enable combined-backend
-
-echo "Starting backend..."
 systemctl restart combined-backend
 
-echo "Enabling Nginx..."
+echo "Enabling and restarting Nginx..."
 systemctl enable nginx
-
-echo "Restarting Nginx..."
 systemctl restart nginx
 
-echo "Application started successfully."
+echo "Application startup completed."
