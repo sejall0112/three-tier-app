@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+rm -f /usr/share/nginx/html/index.html
+
 echo "Checking application dependencies..."
 
 if ! command -v nginx >/dev/null 2>&1; then
