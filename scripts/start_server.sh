@@ -1,4 +1,3 @@
-```bash
 #!/bin/bash
 set -e
 
@@ -24,4 +23,3 @@ echo "Restarting Nginx..."
 systemctl restart nginx
 
 echo "Application started successfully."
-```
