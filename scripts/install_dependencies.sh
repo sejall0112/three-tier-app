@@ -23,5 +23,3 @@ rm -rf /opt/combined-app
 echo "Creating clean application directory..."
 mkdir -p /opt/combined-app
 mkdir -p /usr/share/nginx/html
-
-echo "BeforeInstall completed successfully."
