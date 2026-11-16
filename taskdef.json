@@ -1,4 +1,4 @@
-﻿{
+{
     "family":  "three-tier-fargate-task",
     "taskRoleArn":  null,
     "executionRoleArn":  "arn:aws:iam::236172119834:role/ecsTaskExecutionRole",
@@ -6,7 +6,7 @@
     "containerDefinitions":  [
                                  {
                                      "name":  "three-tier-cont-2",
-                                     "image":  "\u003cIMAGE1_NAME\u003e",
+                                     "image":  "<IMAGE1_NAME>",
                                      "cpu":  0,
                                      "portMappings":  [
                                                           {
