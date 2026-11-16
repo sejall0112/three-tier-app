@@ -1,0 +1,80 @@
+﻿{
+    "family":  "three-tier-fargate-task",
+    "taskRoleArn":  null,
+    "executionRoleArn":  "arn:aws:iam::236172119834:role/ecsTaskExecutionRole",
+    "networkMode":  "awsvpc",
+    "containerDefinitions":  [
+                                 {
+                                     "name":  "three-tier-cont-2",
+                                     "image":  "\u003cIMAGE1_NAME\u003e",
+                                     "cpu":  0,
+                                     "portMappings":  [
+                                                          {
+                                                              "containerPort":  80,
+                                                              "hostPort":  80,
+                                                              "protocol":  "tcp",
+                                                              "name":  "three-tier-cont-2-80-tcp",
+                                                              "appProtocol":  "http"
+                                                          }
+                                                      ],
+                                     "essential":  true,
+                                     "environment":  [
+
+                                                     ],
+                                     "environmentFiles":  [
+
+                                                          ],
+                                     "mountPoints":  [
+
+                                                     ],
+                                     "volumesFrom":  [
+
+                                                     ],
+                                     "secrets":  [
+                                                     {
+                                                         "name":  "DB_HOST",
+                                                         "valueFrom":  "arn:aws:ssm:eu-north-1:236172119834:parameter/three-tier/db-host"
+                                                     },
+                                                     {
+                                                         "name":  "DB_NAME",
+                                                         "valueFrom":  "arn:aws:ssm:eu-north-1:236172119834:parameter/three-tier/db-name"
+                                                     },
+                                                     {
+                                                         "name":  "DB_PASSWORD",
+                                                         "valueFrom":  "arn:aws:ssm:eu-north-1:236172119834:parameter/three-tier/db-password"
+                                                     },
+                                                     {
+                                                         "name":  "DB_USER",
+                                                         "valueFrom":  "arn:aws:ssm:eu-north-1:236172119834:parameter/three-tier/db-user"
+                                                     }
+                                                 ],
+                                     "ulimits":  [
+
+                                                 ],
+                                     "logConfiguration":  {
+                                                              "logDriver":  "awslogs",
+                                                              "options":  {
+                                                                              "awslogs-group":  "/ecs/three-tier-fargate-task",
+                                                                              "awslogs-create-group":  "true",
+                                                                              "awslogs-region":  "eu-north-1",
+                                                                              "awslogs-stream-prefix":  "ecs"
+                                                                          },
+                                                              "secretOptions":  [
+
+                                                                                ]
+                                                          },
+                                     "systemControls":  [
+
+                                                        ]
+                                 }
+                             ],
+    "requiresCompatibilities":  [
+                                    "FARGATE"
+                                ],
+    "cpu":  "512",
+    "memory":  "1024",
+    "runtimePlatform":  {
+                            "cpuArchitecture":  "X86_64",
+                            "operatingSystemFamily":  "LINUX"
+                        }
+}
